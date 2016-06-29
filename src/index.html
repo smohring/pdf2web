@@ -1,0 +1,54 @@
+<!doctype html>
+<!--[if lt IE 7 ]>
+<html lang="en" class="ie6"> <![endif]-->
+<!--[if IE 7 ]>
+<html lang="en" class="ie7"> <![endif]-->
+<!--[if IE 8 ]>
+<html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9 ]>
+<html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="en"> <!--<![endif]-->
+<head>
+	<title>Pdf2Web</title>
+	<meta name="viewport" content="user-scalable = no"/>
+	<script type="text/javascript" src="###base###extras/jquery.min.1.7.js"></script>
+	<script type="text/javascript" src="###base###extras/modernizr.2.5.3.min.js"></script>
+	<script type="text/javascript" src="###base###lib/hash.js"></script>
+	<style>
+		.border{
+			border:20px solid transparent;
+		}
+		.magazine-viewport{
+			padding: 20px 0;
+		}
+	</style>
+</head>
+<body>
+<div id="canvas">
+	<div class="zoom-icon zoom-icon-in"></div>
+	<div class="magazine-viewport">
+		<div class="container">
+			<div class="magazine">
+				<!-- Next button -->
+				<div ignore="1" class="next-button"></div>
+				<!-- Previous button -->
+				<div ignore="1" class="previous-button"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	var vars = {};
+	vars.border = false;
+	vars.width = ###width###;
+	vars.height = ###height###;
+	vars.pages = ###pages###;
+	vars.hash = '###hash###';
+	vars.base = '###base###';
+
+	function loadApp(){if(window==window.top){vars.border=true;$("body").addClass("border")}$("#canvas").fadeIn(1e3);var e=$(".magazine");if(e.width()==0||e.height()==0){setTimeout(loadApp,10);return}e.turn({width:vars.width*2,height:vars.height,duration:1e3,acceleration:!isChrome(),gradients:true,autoCenter:true,elevation:50,pages:vars.pages,when:{turning:function(e,t,n){var r=$(this),i=r.turn("page"),s=r.turn("pages");Hash.go("page/"+t).update();disableControls(t);$(".thumbnails .page-"+i).parent().removeClass("current");$(".thumbnails .page-"+t).parent().addClass("current")},turned:function(e,t,n){disableControls(t);$(this).turn("center");if(t==1){$(this).turn("peel","br")}},missing:function(e,t){for(var n=0;n<t.length;n++)addPage(t[n],$(this))}}});$(".magazine-viewport").zoom({flipbook:$(".magazine"),max:function(){return largeMagazineWidth()/$(".magazine").width()},when:{swipeLeft:function(){$(this).zoom("flipbook").turn("next")},swipeRight:function(){$(this).zoom("flipbook").turn("previous")},resize:function(e,t,n,r){if(t==1)loadSmallPage(n,r);else loadLargePage(n,r)},zoomIn:function(){$(".thumbnails").hide();$(".made").hide();$(".magazine").removeClass("animated").addClass("zoom-in");$(".zoom-icon").removeClass("zoom-icon-in").addClass("zoom-icon-out");if(!window.escTip&&!$.isTouch){escTip=true;$("<div />",{"class":"exit-message"}).html("<div>Zum Abbrechen ESC</div>").appendTo($("body")).delay(2e3).animate({opacity:0},500,function(){$(this).remove()})}},zoomOut:function(){$(".exit-message").hide();$(".thumbnails").fadeIn();$(".made").fadeIn();$(".zoom-icon").removeClass("zoom-icon-out").addClass("zoom-icon-in");setTimeout(function(){$(".magazine").addClass("animated").removeClass("zoom-in");resizeViewport()},0)}}});if($.isTouch)$(".magazine-viewport").bind("zoom.doubleTap",zoomTo);else $(".magazine-viewport").bind("zoom.tap",zoomTo);$(document).keydown(function(e){var t=37,n=39,r=27;switch(e.keyCode){case t:$(".magazine").turn("previous");e.preventDefault();break;case n:$(".magazine").turn("next");e.preventDefault();break;case r:$(".magazine-viewport").zoom("zoomOut");e.preventDefault();break}});Hash.on("^page/([0-9]*)$",{yep:function(e,t){var n=t[1];if(n!==undefined){if($(".magazine").turn("is"))$(".magazine").turn("page",n)}},nop:function(e){if($(".magazine").turn("is"))$(".magazine").turn("page",1)}});$(window).resize(function(){resizeViewport()}).bind("orientationchange",function(){resizeViewport()});$(".thumbnails").click(function(e){var t;if(e.target&&(t=/page-([0-9]+)/.exec($(e.target).attr("class")))){$(".magazine").turn("page",t[1])}});$(".thumbnails li").bind($.mouseEvents.over,function(){$(this).addClass("thumb-hover")}).bind($.mouseEvents.out,function(){$(this).removeClass("thumb-hover")});if($.isTouch){$(".thumbnails").addClass("thumbanils-touch").bind($.mouseEvents.move,function(e){e.preventDefault()})}else{$(".thumbnails ul").mouseover(function(){$(".thumbnails").addClass("thumbnails-hover")}).mousedown(function(){return false}).mouseout(function(){$(".thumbnails").removeClass("thumbnails-hover")})}if($.isTouch){$(".magazine").bind("touchstart",regionClick)}else{$(".magazine").click(regionClick)}$(".next-button").bind($.mouseEvents.over,function(){$(this).addClass("next-button-hover")}).bind($.mouseEvents.out,function(){$(this).removeClass("next-button-hover")}).bind($.mouseEvents.down,function(){$(this).addClass("next-button-down")}).bind($.mouseEvents.up,function(){$(this).removeClass("next-button-down")}).click(function(){$(".magazine").turn("next")});$(".previous-button").bind($.mouseEvents.over,function(){$(this).addClass("previous-button-hover")}).bind($.mouseEvents.out,function(){$(this).removeClass("previous-button-hover")}).bind($.mouseEvents.down,function(){$(this).addClass("previous-button-down")}).bind($.mouseEvents.up,function(){$(this).removeClass("previous-button-down")}).click(function(){$(".magazine").turn("previous")});resizeViewport();$(".magazine").addClass("animated")}function addPage(e,t){var n,r=t.turn("pages");var i=$("<div />",{});if(t.turn("addPage",i,e)){i.html('<div class="gradient"></div><div class="loader"></div>');loadPage(e,i)}}function loadPage(e,t){var n=$("<img />");n.mousedown(function(e){e.preventDefault()});n.load(function(){$(this).css({width:"100%",height:"100%"});$(this).appendTo(t);t.find(".loader").remove()});n.attr("src",vars.hash+"/page-"+e+".jpg");loadRegions(e,t)}function zoomTo(e){setTimeout(function(){if($(".magazine-viewport").data().regionClicked){$(".magazine-viewport").data().regionClicked=false}else{if($(".magazine-viewport").zoom("value")==1){$(".magazine-viewport").zoom("zoomIn",e)}else{$(".magazine-viewport").zoom("zoomOut")}}},1)}function loadRegions(e,t){$.getJSON("pages/"+e+"-regions.json").done(function(e){$.each(e,function(e,n){addRegion(n,t)})})}function addRegion(e,t){var n=$("<div />",{"class":"region  "+e["class"]}),r=$(".magazine").turn("options"),i=r.width/2,s=r.height;n.css({top:Math.round(e.y/s*100)+"%",left:Math.round(e.x/i*100)+"%",width:Math.round(e.width/i*100)+"%",height:Math.round(e.height/s*100)+"%"}).attr("region-data",$.param(e.data||""));n.appendTo(t)}function regionClick(e){var t=$(e.target);if(t.hasClass("region")){$(".magazine-viewport").data().regionClicked=true;setTimeout(function(){$(".magazine-viewport").data().regionClicked=false},100);var n=$.trim(t.attr("class").replace("region",""));return processRegion(t,n)}}function processRegion(e,t){data=decodeParams(e.attr("region-data"));switch(t){case"zoom":var n=e.offset(),r=$(".magazine-viewport").offset(),i={x:n.left-r.left,y:n.top-r.top};$(".magazine-viewport").zoom("zoomIn",i);break;case"to-page":$(".magazine").turn("page",data.page);break}}function loadLargePage(e,t){var n=$("<img />");n.load(function(){var e=t.find("img");$(this).css({width:"100%",height:"100%"});$(this).appendTo(t);e.remove()});n.attr("src",vars.hash+"/page-"+e+".jpg")}function loadSmallPage(e,t){var n=t.find("img");n.css({width:"100%",height:"100%"});n.unbind("load");n.attr("src",vars.hash+"/page-"+e+".jpg")}function isChrome(){return navigator.userAgent.indexOf("Chrome")!=-1}function disableControls(e){if(e==1)$(".previous-button").hide();else $(".previous-button").show();if(e==$(".magazine").turn("pages"))$(".next-button").hide();else $(".next-button").show()}function resizeViewport(){var e=$(window).width(),t=$(window).height()-(vars.border?80:0),n=$(".magazine").turn("options");$(".magazine").removeClass("animated");$(".magazine-viewport").css({width:e,height:t}).zoom("resize");if($(".magazine").turn("zoom")==1){var r=calculateBound({width:n.width,height:n.height,boundWidth:Math.min(n.width,e),boundHeight:Math.min(n.height,t)});if(r.width%2!==0)r.width-=1;if(r.width!=$(".magazine").width()||r.height!=$(".magazine").height()){$(".magazine").turn("size",r.width,r.height);if($(".magazine").turn("page")==1)$(".magazine").turn("peel","br");$(".next-button").css({height:r.height,backgroundPosition:"-38px "+(r.height/2-32/2)+"px"});$(".previous-button").css({height:r.height,backgroundPosition:"-4px "+(r.height/2-32/2)+"px"})}$(".magazine").css({top:-r.height/2,left:-r.width/2})}var i=$(".magazine").offset(),s=t-i.top-$(".magazine").height(),o=(s-$(".thumbnails > div").height())/2;if(o<0){$(".thumbnails").css({height:1})}else{$(".thumbnails").css({height:s});$(".thumbnails > div").css({marginTop:o})}if(i.top<$(".made").height())$(".made").hide();else $(".made").show();$(".magazine").addClass("animated")}function numberOfViews(e){return e.turn("pages")/2+1}function getViewNumber(e,t){return parseInt((t||e.turn("page"))/2+1,10)}function moveBar(e){if(Modernizr&&Modernizr.csstransforms){$("#slider .ui-slider-handle").css({zIndex:e?-1:1e4})}}function largeMagazineWidth(){return 2214}function decodeParams(e){var t=e.split("&"),n,r={};for(var i=0;i<t.length;i++){n=t[i].split("=");r[decodeURIComponent(n[0])]=decodeURIComponent(n[1])}return r}function calculateBound(e){var t={width:e.width,height:e.height};if(t.width>e.boundWidth||t.height>e.boundHeight){var n=t.width/t.height;if(e.boundWidth/n>e.boundHeight&&e.boundHeight*n<=e.boundWidth){t.width=Math.round(e.boundHeight*n);t.height=e.boundHeight}else{t.width=e.boundWidth;t.height=Math.round(e.boundWidth/n)}}return t}var vars={};vars.border=false;vars.width="###width###";vars.height="###height###";vars.pages="###pages###";vars.hash="###hash###";vars.base="###base###";$(".zoom-icon").bind("mouseover",function(){if($(this).hasClass("zoom-icon-in"))$(this).addClass("zoom-icon-in-hover");if($(this).hasClass("zoom-icon-out"))$(this).addClass("zoom-icon-out-hover")}).bind("mouseout",function(){if($(this).hasClass("zoom-icon-in"))$(this).removeClass("zoom-icon-in-hover");if($(this).hasClass("zoom-icon-out"))$(this).removeClass("zoom-icon-out-hover")}).bind("click",function(){if($(this).hasClass("zoom-icon-in"))$(".magazine-viewport").zoom("zoomIn");else if($(this).hasClass("zoom-icon-out"))$(".magazine-viewport").zoom("zoomOut")});$("#canvas").hide();yepnope({test:Modernizr.csstransforms,yep:[vars.base+"lib/turn.min.js"],nope:[vars.base+"lib/turn.html4.min.js"],both:[vars.base+"lib/zoom.min.js",vars.base+"css/magazine.css"],complete:loadApp})
+</script>
+</body>
+</html>
